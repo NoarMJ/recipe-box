@@ -1,0 +1,338 @@
+```css
+/* =========================
+   BASE
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f7f5f2;
+  color: #242321;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+
+/* =========================
+   MAIN APP
+========================= */
+
+#root {
+  min-height: 100vh;
+}
+
+#root > div {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px 60px;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+#root > div > h1 {
+  margin: 0 -40px 40px;
+  padding: 36px 40px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e1dc;
+
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+
+/* =========================
+   RECIPE INPUT
+========================= */
+
+#root > div > div:first-child {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+#root > div > div:first-child input {
+  width: 100%;
+  max-width: 500px;
+  padding: 13px 15px;
+
+  border: 1px solid #d8d3cc;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #242321;
+}
+
+#root > div > div:first-child input:focus {
+  outline: 2px solid #c75c3c;
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+button {
+  padding: 11px 16px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #c75c3c;
+  color: #ffffff;
+
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    background 150ms ease,
+    transform 100ms ease;
+}
+
+button:hover {
+  background: #ae4e32;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:focus-visible {
+  outline: 2px solid #242321;
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   MAIN HEADINGS
+========================= */
+
+#root > div > h2 {
+  margin: 48px 0 20px;
+
+  font-size: 24px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   RECIPE LIST
+========================= */
+
+#root > div > ul {
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+
+/* =========================
+   RECIPE CARDS
+========================= */
+
+#root > div > ul > li {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+
+  gap: 24px;
+
+  margin-bottom: 24px;
+  padding: 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e1dc;
+  border-radius: 12px;
+
+  box-shadow: 0 2px 6px rgba(36, 35, 33, 0.05);
+}
+
+
+/* =========================
+   RECIPE IMAGE
+========================= */
+
+#root > div > ul > li > img {
+  width: 220px;
+  height: 180px;
+
+  object-fit: cover;
+
+  border-radius: 8px;
+  background: #ebe7e1;
+}
+
+
+/* =========================
+   RECIPE NAME
+========================= */
+
+#root > div > ul > li {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   DIFFICULTY
+========================= */
+
+#root > div > ul > li > p {
+  margin: 10px 0;
+
+  color: #6f6b65;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+
+/* =========================
+   INGREDIENTS
+========================= */
+
+#root > div > ul > li > ul {
+  margin: 12px 0;
+  padding-left: 20px;
+
+  color: #5e5a54;
+
+  font-size: 14px;
+  font-weight: 400;
+}
+
+#root > div > ul > li > ul li {
+  margin-bottom: 5px;
+}
+
+
+/* =========================
+   FAVORITE BUTTONS
+========================= */
+
+#root > div > ul > li > button {
+  margin-right: 8px;
+  margin-top: 10px;
+}
+
+
+/* =========================
+   FAVORITE RECIPES
+========================= */
+
+#root > div > h2:nth-of-type(2) {
+  margin-top: 64px;
+}
+
+
+/* Favorite recipe cards */
+
+#root > div > ul:nth-of-type(2) > li {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 18px 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e1dc;
+  border-radius: 12px;
+
+  margin-bottom: 14px;
+}
+
+
+/* Favorite images */
+
+#root > div > ul:nth-of-type(2) > li > img {
+  width: 100px;
+  height: 80px;
+
+  object-fit: cover;
+
+  border-radius: 8px;
+}
+
+
+/* Favorite rating buttons */
+
+#root > div > ul:nth-of-type(2) > li > button {
+  padding: 8px 11px;
+  margin-left: 4px;
+}
+
+
+/* Rating text */
+
+#root > div > ul:nth-of-type(2) > li > span {
+  margin-left: 10px;
+
+  color: #6f6b65;
+
+  font-size: 14px;
+}
+
+
+/* =========================
+   GET RECIPES BUTTON
+========================= */
+
+#root > div > div:last-child {
+  margin-top: 32px;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+  #root > div {
+    padding: 0 20px 40px;
+  }
+
+  #root > div > h1 {
+    margin-left: -20px;
+    margin-right: -20px;
+
+    padding: 28px 20px;
+
+    font-size: 28px;
+  }
+
+
+  #root > div > ul > li {
+    grid-template-columns: 1fr;
+  }
+
+
+  #root > div > ul > li > img {
+    width: 100%;
+    height: 220px;
+  }
+
+
+  #root > div > ul:nth-of-type(2) > li {
+    flex-wrap: wrap;
+  }
+
+
+  #root > div > ul:nth-of-type(2) > li > img {
+    width: 100%;
+    height: 180px;
+  }
+
+}
+```
