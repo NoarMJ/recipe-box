@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link ,useNavigate} from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addFavoriteRecipe, removeFavoriteRecipe } from '../features/userProfile/userProfileSlice';
 import {
@@ -19,11 +19,12 @@ import {
   Grid,
   Skeleton,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import StarIcon from '@mui/icons-material/Star';
-import { selectAllRecipes } from '../features/recipes/recipesSlice';
+import { selectAllRecipes , setRating, removeRecipe} from '../features/recipes/recipesSlice';
 
 function RecipeDetailSkeleton() {
   return (
@@ -58,15 +59,17 @@ function RecipeDetailSkeleton() {
 function RecipeDetailPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const recipes = useSelector(selectAllRecipes);
   const { status } = useSelector((state) => state.recipes);
   const favoriteIds = useSelector((state) => state.userProfile.favoriteIds);
+  const userItems = useSelector((state) => state.recipes.userItems);
 
   if (status === 'loading' || status === 'idle') {
     return <RecipeDetailSkeleton />;
   }
 
-  const recipe = recipes.find((r) => r.id === Number(id));
+  const recipe = recipes.find((r) => String(r.id) === String(id));
 
   if (!recipe) {
     return (
@@ -86,6 +89,25 @@ function RecipeDetailPage() {
 
   const isFavorite = favoriteIds.includes(recipe.id);
 
+  const isUserCreated = userItems.some(
+    (item) => String(item.id) === String(recipe.id)
+  );
+
+  const handleDeleteRecipe = () => {  
+    const confirmed = window.confirm (
+      `Are you sure you want to delete the recipe "${recipe.name}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    if(isFavorite) {
+      dispatch(removeFavoriteRecipe(recipe.id));
+    }
+
+    dispatch(removeRecipe(recipe.id));
+    navigate('/');
+  };
+
+
   return (
     <Container maxWidth="md" sx={{ mb: 4 }}>
       <Button
@@ -99,7 +121,7 @@ function RecipeDetailPage() {
 
       <Paper sx={{ p: 4 }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{xs:12 , md:6}} >
             <Card>
               <CardMedia
                 component="img"
@@ -111,7 +133,7 @@ function RecipeDetailPage() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{xs:12 , md:6}}>
             <Typography variant="h4" component="h1" gutterBottom>
               {recipe.name}
             </Typography>
@@ -145,22 +167,26 @@ function RecipeDetailPage() {
               <Typography variant="body1" color="text.secondary">
                 Rating:
               </Typography>
+
+
               <Rating
-                value={recipe.rating || 0}
-                readOnly
+                name={`rating-${recipe.id}`}
+                value={recipe.rating ?? 0}
+                onChange={(event, newValue) => {
+                  if(newValue !== null) {
+                    dispatch(setRating({ id: recipe.id, rating: newValue }));
+                  }
+                }}
                 precision={1}
-                emptyIcon={<StarIcon style={{ opacity: 0.3 }} fontSize="inherit" />}
+                emptyIcon={<StarIcon 
+                  style={{ opacity: 0.3 }}
+                   fontSize="inherit" 
+                   />
+                  }
               />
-              {recipe.rating && (
-                <Typography variant="body2" color="text.secondary">
-                  ({recipe.rating}/5)
-                </Typography>
-              )}
-              {recipe.reviewCount && (
-                <Typography variant="body2" color="text.secondary">
-                  ({recipe.reviewCount} reviews)
-                </Typography>
-              )}
+              <Typography variant="body2" color="text.secondary">
+                ({recipe.rating ?? 0}/5)
+              </Typography>
             </Box>
 
             {/* Tags */}
@@ -205,6 +231,18 @@ function RecipeDetailPage() {
             >
               {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
             </Button>
+            {isUserCreated && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteRecipe}
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                Delete Recipe
+              </Button>
+            )}
           </Grid>
         </Grid>
 

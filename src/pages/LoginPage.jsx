@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { Navigate ,useNavigate, Link } from 'react-router-dom';
 import { login } from '../features/auth/authSlice';
 import {
   Container,
@@ -53,8 +53,7 @@ function LoginPage() {
 
   // Redirect if already logged in
   if (isAuthenticated) {
-    navigate('/');
-    return null;
+    return <Navigate to ="/" replace/>;
   }
 
   return (

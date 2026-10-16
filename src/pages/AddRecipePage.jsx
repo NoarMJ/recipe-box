@@ -20,7 +20,6 @@ import {
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-
 const emptyForm = {
   name: '',
   cuisine: '',
@@ -33,19 +32,15 @@ const emptyForm = {
   imageFile: null,
 };
 
-
 function AddRecipePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [form, setForm] = useState(emptyForm);
-
   const [ingredients, setIngredients] = useState([]);
   const [instructions, setInstructions] = useState([]);
-
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState('');
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,21 +53,23 @@ function AddRecipePage() {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
+
     if (file) {
       setForm((prev) => ({ ...prev, imageFile: file }));
+
       const reader = new FileReader();
+
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
+
       reader.readAsDataURL(file);
     }
   };
 
-
   const addIngredient = () => {
     setIngredients((prev) => [...prev, '']);
   };
-
 
   const handleIngredientChange = (index, value) => {
     setIngredients((prev) => {
@@ -82,11 +79,9 @@ function AddRecipePage() {
     });
   };
 
-
   const addInstruction = () => {
     setInstructions((prev) => [...prev, '']);
   };
-
 
   const handleInstructionChange = (index, value) => {
     setInstructions((prev) => {
@@ -95,7 +90,6 @@ function AddRecipePage() {
       return updated;
     });
   };
-
 
   const validate = () => {
     const newErrors = {};
@@ -107,30 +101,35 @@ function AddRecipePage() {
     // Prep time validation
     if (form.prepTimeMinutes !== '') {
       const prepTime = Number(form.prepTimeMinutes);
+
       if (isNaN(prepTime)) {
         newErrors.prepTimeMinutes = 'Prep time must be a number';
       } else if (prepTime < 0) {
         newErrors.prepTimeMinutes = 'Prep time cannot be negative';
       } else if (prepTime > 1440) {
-        newErrors.prepTimeMinutes = 'Prep time cannot exceed 24 hours (1440 minutes)';
+        newErrors.prepTimeMinutes =
+          'Prep time cannot exceed 24 hours (1440 minutes)';
       }
     }
 
     // Cook time validation
     if (form.cookTimeMinutes !== '') {
       const cookTime = Number(form.cookTimeMinutes);
+
       if (isNaN(cookTime)) {
         newErrors.cookTimeMinutes = 'Cook time must be a number';
       } else if (cookTime < 0) {
         newErrors.cookTimeMinutes = 'Cook time cannot be negative';
       } else if (cookTime > 1440) {
-        newErrors.cookTimeMinutes = 'Cook time cannot exceed 24 hours (1440 minutes)';
+        newErrors.cookTimeMinutes =
+          'Cook time cannot exceed 24 hours (1440 minutes)';
       }
     }
 
     // Servings validation
     if (form.servings !== '') {
       const servings = Number(form.servings);
+
       if (isNaN(servings)) {
         newErrors.servings = 'Servings must be a number';
       } else if (servings <= 0) {
@@ -143,6 +142,7 @@ function AddRecipePage() {
     // Calories validation
     if (form.caloriesPerServing !== '') {
       const calories = Number(form.caloriesPerServing);
+
       if (isNaN(calories)) {
         newErrors.caloriesPerServing = 'Calories must be a number';
       } else if (calories < 0) {
@@ -152,9 +152,14 @@ function AddRecipePage() {
       }
     }
 
-    // Image validation (only validate URL if no file is uploaded)
-    if (!form.imageFile && form.image.trim() && !/^https?:\/\//.test(form.image.trim())) {
-      newErrors.image = 'Image must be a link starting with http:// or https://, or upload a file';
+    // Validate image URL only when no file is uploaded
+    if (
+      !form.imageFile &&
+      form.image.trim() &&
+      !/^https?:\/\//.test(form.image.trim())
+    ) {
+      newErrors.image =
+        'Image must be a link starting with http:// or https://, or upload a file';
     }
 
     const validIngredients = ingredients
@@ -168,23 +173,20 @@ function AddRecipePage() {
     return newErrors;
   };
 
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const newErrors = validate();
-
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
       return;
     }
 
-    // Handle image - use uploaded file if available, otherwise use URL
-    let finalImage = form.image.trim();
-    if (form.imageFile) {
-      finalImage = imagePreview;
-    }
+    // Use the uploaded image if available; otherwise use the URL.
+    const finalImage = form.imageFile
+      ? imagePreview
+      : form.image.trim();
 
     const newRecipe = {
       id: Date.now(),
@@ -209,10 +211,8 @@ function AddRecipePage() {
     navigate(`/recipes/${newRecipe.id}`);
   };
 
-
   return (
     <Container maxWidth="md" sx={{ mb: 4 }}>
-
       <Button
         component={Link}
         variant="outlined"
@@ -224,7 +224,6 @@ function AddRecipePage() {
         Back
       </Button>
 
-      {/* Centered Page Title */}
       <Typography
         variant="h4"
         component="h1"
@@ -235,7 +234,6 @@ function AddRecipePage() {
         Add a Recipe
       </Typography>
 
-      {/* Form Container */}
       <Paper
         elevation={3}
         sx={{
@@ -243,15 +241,10 @@ function AddRecipePage() {
           borderRadius: 2,
         }}
       >
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          noValidate
-        >
+        <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={3}>
-
             {/* Recipe Name */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Recipe Name *"
@@ -265,7 +258,7 @@ function AddRecipePage() {
             </Grid>
 
             {/* Cuisine */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Cuisine"
@@ -276,7 +269,7 @@ function AddRecipePage() {
             </Grid>
 
             {/* Difficulty */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <FormLabel>Difficulty</FormLabel>
                 <RadioGroup
@@ -285,15 +278,27 @@ function AddRecipePage() {
                   value={form.difficulty}
                   onChange={handleChange}
                 >
-                  <FormControlLabel value="Easy" control={<Radio />} label="Easy" />
-                  <FormControlLabel value="Medium" control={<Radio />} label="Medium" />
-                  <FormControlLabel value="Hard" control={<Radio />} label="Hard" />
+                  <FormControlLabel
+                    value="Easy"
+                    control={<Radio />}
+                    label="Easy"
+                  />
+                  <FormControlLabel
+                    value="Medium"
+                    control={<Radio />}
+                    label="Medium"
+                  />
+                  <FormControlLabel
+                    value="Hard"
+                    control={<Radio />}
+                    label="Hard"
+                  />
                 </RadioGroup>
               </FormControl>
             </Grid>
 
             {/* Prep Time */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 fullWidth
                 label="Prep Time (minutes)"
@@ -303,12 +308,14 @@ function AddRecipePage() {
                 onChange={handleChange}
                 error={!!errors.prepTimeMinutes}
                 helperText={errors.prepTimeMinutes}
-                inputProps={{ min: 0, max: 1440 }}
+                slotProps={{
+                  htmlInput: { min: 0, max: 1440 },
+                }}
               />
             </Grid>
 
             {/* Cook Time */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 fullWidth
                 label="Cook Time (minutes)"
@@ -318,12 +325,14 @@ function AddRecipePage() {
                 onChange={handleChange}
                 error={!!errors.cookTimeMinutes}
                 helperText={errors.cookTimeMinutes}
-                inputProps={{ min: 0, max: 1440 }}
+                slotProps={{
+                  htmlInput: { min: 0, max: 1440 },
+                }}
               />
             </Grid>
 
             {/* Servings */}
-            <Grid item xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 fullWidth
                 label="Servings"
@@ -333,12 +342,14 @@ function AddRecipePage() {
                 onChange={handleChange}
                 error={!!errors.servings}
                 helperText={errors.servings}
-                inputProps={{ min: 1, max: 100 }}
+                slotProps={{
+                  htmlInput: { min: 1, max: 100 },
+                }}
               />
             </Grid>
 
             {/* Calories */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Calories per Serving"
@@ -348,17 +359,26 @@ function AddRecipePage() {
                 onChange={handleChange}
                 error={!!errors.caloriesPerServing}
                 helperText={errors.caloriesPerServing}
-                inputProps={{ min: 0, max: 10000 }}
+                slotProps={{
+                  htmlInput: { min: 0, max: 10000 },
+                }}
               />
             </Grid>
 
-            {/* Image Upload or URL */}
-            <Grid item xs={12} sm={6}>
+            {/* Image Upload */}
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Box>
                 <Typography variant="subtitle2" gutterBottom>
                   Image (Upload or URL)
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'center',
+                  }}
+                >
                   <Button
                     variant="outlined"
                     component="label"
@@ -372,6 +392,7 @@ function AddRecipePage() {
                       onChange={handleImageUpload}
                     />
                   </Button>
+
                   <Typography variant="body2" color="text.secondary">
                     or
                   </Typography>
@@ -380,7 +401,7 @@ function AddRecipePage() {
             </Grid>
 
             {/* Image URL */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Image URL"
@@ -395,7 +416,7 @@ function AddRecipePage() {
 
             {/* Image Preview */}
             {imagePreview && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box
                   component="img"
                   src={imagePreview}
@@ -412,29 +433,46 @@ function AddRecipePage() {
             )}
 
             {/* Ingredients */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Ingredients *
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
                 {ingredients.map((ingredient, index) => (
                   <Box
                     key={index}
-                    sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                    }}
                   >
-                    <Typography sx={{ minWidth: 25, fontWeight: 'bold' }}>
+                    <Typography
+                      sx={{ minWidth: 25, fontWeight: 'bold' }}
+                    >
                       {index + 1}.
                     </Typography>
+
                     <TextField
                       fullWidth
                       label={`Ingredient ${index + 1}`}
                       placeholder="Enter ingredient"
                       value={ingredient}
-                      onChange={(e) => handleIngredientChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleIngredientChange(index, e.target.value)
+                      }
                     />
                   </Box>
                 ))}
               </Box>
+
               <Button
                 type="button"
                 variant="outlined"
@@ -443,27 +481,50 @@ function AddRecipePage() {
               >
                 + Add Ingredient
               </Button>
+
               {errors.ingredients && (
-                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                <Typography
+                  color="error"
+                  variant="body2"
+                  sx={{ mt: 1 }}
+                >
                   {errors.ingredients}
                 </Typography>
               )}
             </Grid>
 
             {/* Instructions */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Instructions
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
                 {instructions.map((instruction, index) => (
                   <Box
                     key={index}
-                    sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1.5,
+                    }}
                   >
-                    <Typography sx={{ minWidth: 25, fontWeight: 'bold', mt: 1.5 }}>
+                    <Typography
+                      sx={{
+                        minWidth: 25,
+                        fontWeight: 'bold',
+                        mt: 1.5,
+                      }}
+                    >
                       {index + 1}.
                     </Typography>
+
                     <TextField
                       fullWidth
                       multiline
@@ -471,11 +532,14 @@ function AddRecipePage() {
                       label={`Step ${index + 1}`}
                       placeholder="Enter instruction"
                       value={instruction}
-                      onChange={(e) => handleInstructionChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleInstructionChange(index, e.target.value)
+                      }
                     />
                   </Box>
                 ))}
               </Box>
+
               <Button
                 type="button"
                 variant="outlined"
@@ -486,8 +550,11 @@ function AddRecipePage() {
               </Button>
             </Grid>
 
-            {/* Save Recipe - centered at bottom */}
-            <Grid item xs={12} sx={{ mt: 4, display: 'block', textAlign: 'right' }}>
+            {/* Save Recipe */}
+            <Grid
+              size={{ xs: 12 }}
+              sx={{ mt: 4, display: 'block', textAlign: 'right' }}
+            >
               <Button
                 type="submit"
                 variant="contained"
@@ -497,14 +564,11 @@ function AddRecipePage() {
                 Save Recipe
               </Button>
             </Grid>
-
           </Grid>
         </Box>
       </Paper>
-
     </Container>
   );
 }
-
 
 export default AddRecipePage;

@@ -1,7 +1,16 @@
+
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setRating } from '../features/recipes/recipesSlice';
-import { removeFavoriteRecipe } from '../features/userProfile/userProfileSlice';
-import { useState } from 'react';
+
+import {
+  selectAllRecipes,
+  setRating,
+} from '../features/recipes/recipesSlice';
+
+import {
+  removeFavoriteRecipe,
+} from '../features/userProfile/userProfileSlice';
+
 import {
   Container,
   Typography,
@@ -17,6 +26,7 @@ import {
   Chip,
   Skeleton,
 } from '@mui/material';
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
 
@@ -30,14 +40,34 @@ function RecipeCardSkeleton() {
           flexDirection: 'column',
         }}
       >
-        <Skeleton variant="rectangular" height={200} animation="wave" />
+        <Skeleton
+          variant="rectangular"
+          height={200}
+          animation="wave"
+        />
+
         <CardContent sx={{ flexGrow: 1 }}>
-          <Skeleton variant="text" height={32} width="80%" animation="wave" />
-          <Skeleton variant="text" height={24} width="40%" animation="wave" sx={{ mt: 1 }} />
-          <Skeleton variant="text" height={20} width="60%" animation="wave" sx={{ mt: 1 }} />
+          <Skeleton variant="text" height={32} width="80%" />
+          <Skeleton
+            variant="text"
+            height={24}
+            width="40%"
+            sx={{ mt: 1 }}
+          />
+          <Skeleton
+            variant="text"
+            height={20}
+            width="60%"
+            sx={{ mt: 1 }}
+          />
         </CardContent>
+
         <CardActions>
-          <Skeleton variant="rectangular" height={36} width={100} animation="wave" />
+          <Skeleton
+            variant="rectangular"
+            height={36}
+            width={100}
+          />
         </CardActions>
       </Card>
     </Grid>
@@ -46,45 +76,71 @@ function RecipeCardSkeleton() {
 
 function FavoritesPage() {
   const dispatch = useDispatch();
+
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 9;
 
-  const { items: recipes, status } = useSelector((state) => state.recipes);
+  // Get both API recipes and user-created recipes.
+  const recipes = useSelector(selectAllRecipes);
 
-  const favoriteIds = useSelector((state) => state.userProfile.favoriteIds);
+  const { status, error } = useSelector(
+    (state) => state.recipes
+  );
 
-  const favoriteRecipes = recipes.filter((r) => favoriteIds.includes(r.id));
+  const favoriteIds = useSelector(
+    (state) => state.userProfile.favoriteIds
+  );
+
+  const favoriteRecipes = recipes.filter((recipe) =>
+    favoriteIds.includes(recipe.id)
+  );
+
+  const totalPages = Math.ceil(
+    favoriteRecipes.length / recipesPerPage
+  );
 
   const indexOfLastRecipe = currentPage * recipesPerPage;
   const indexOfFirstRecipe = indexOfLastRecipe - recipesPerPage;
-  const currentRecipes = favoriteRecipes.slice(indexOfFirstRecipe, indexOfLastRecipe);
-  const totalPages = Math.ceil(favoriteRecipes.length / recipesPerPage);
+
+  const currentRecipes = favoriteRecipes.slice(
+    indexOfFirstRecipe,
+    indexOfLastRecipe
+  );
+
+  // Keep pagination valid after a favorite is removed.
+  useEffect(() => {
+    const lastValidPage = Math.max(1, totalPages);
+
+    if (currentPage > lastValidPage) {
+      setCurrentPage(lastValidPage);
+    }
+  }, [currentPage, totalPages]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   };
 
-  const handleSetRating = async (recipe, rating) => {
-    try {
-      const response = await fetch(
-        `https://dummyjson.com/recipes/${recipe.id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rating }),
-        }
-      );
+  const handleSetRating = (recipe, rating) => {
+    console.log('Recipe:', recipe.id, recipe.name);
+    console.log('Selected rating:', rating);
+    if (rating === null) return;
 
-      if (!response.ok) throw new Error('Rating failed');
-
-      dispatch(setRating({ id: recipe.id, rating }));
-    } catch (err) {
-      console.error(err);
-    }
+    dispatch(
+      setRating({
+        id: recipe.id,
+        rating,
+      })
+    );
   };
 
-  if (status === 'loading' || status === 'idle') {
+  
+
+  // Show loading placeholders while the initial request is running.
+  if (status === 'idle' || status === 'loading') {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom>
@@ -92,10 +148,25 @@ function FavoritesPage() {
         </Typography>
 
         <Grid container spacing={3} sx={{ mt: 2 }}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-            <RecipeCardSkeleton key={item} />
+          {Array.from({ length: 9 }, (_, index) => (
+            <RecipeCardSkeleton key={index} />
           ))}
         </Grid>
+      </Container>
+    );
+  }
+
+  // If loading fails, local user-created favorites can still be shown.
+  if (status === 'failed' && favoriteRecipes.length === 0) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom>
+          Favorite Recipes
+        </Typography>
+
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error || 'Unable to load recipes. Please try again later.'}
+        </Alert>
       </Container>
     );
   }
@@ -105,6 +176,13 @@ function FavoritesPage() {
       <Typography variant="h3" component="h1" gutterBottom>
         Favorite Recipes
       </Typography>
+
+      {status === 'failed' && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          Some recipes could not be loaded from the API. Your
+          locally saved favorites are still available.
+        </Alert>
+      )}
 
       {favoriteRecipes.length === 0 && (
         <Alert severity="info" sx={{ mt: 2 }}>
@@ -130,69 +208,144 @@ function FavoritesPage() {
               <CardMedia
                 component="img"
                 height="200"
-                image={recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'}
+                image={
+                  recipe.image ||
+                  'https://via.placeholder.com/300x200?text=No+Image'
+                }
                 alt={recipe.name}
                 sx={{ objectFit: 'cover' }}
               />
+
               <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" component="div" gutterBottom>
+                <Typography
+                  variant="h6"
+                  component="div"
+                  gutterBottom
+                >
                   {recipe.name}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    flexWrap: 'wrap',
+                    mb: 2,
+                  }}
+                >
                   <Chip
                     label={recipe.difficulty || 'Easy'}
                     size="small"
-                    color={recipe.difficulty === 'Hard' ? 'error' : recipe.difficulty === 'Medium' ? 'warning' : 'success'}
+                    color={
+                      recipe.difficulty === 'Hard'
+                        ? 'error'
+                        : recipe.difficulty === 'Medium'
+                          ? 'warning'
+                          : 'success'
+                    }
                   />
+
                   {recipe.cuisine && (
-                    <Chip label={recipe.cuisine} size="small" variant="outlined" />
+                    <Chip
+                      label={recipe.cuisine}
+                      size="small"
+                      variant="outlined"
+                    />
                   )}
                 </Box>
-                <Box sx={{ mt: 1.5, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  {recipe.prepTimeMinutes && (
-                    <Typography variant="body2" color="text.secondary">
+
+                <Box
+                  sx={{
+                    mt: 1.5,
+                    display: 'flex',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  {recipe.prepTimeMinutes != null && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       ⏱️ {recipe.prepTimeMinutes}m prep
                     </Typography>
                   )}
-                  {recipe.cookTimeMinutes && (
-                    <Typography variant="body2" color="text.secondary">
+
+                  {recipe.cookTimeMinutes != null && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       🔥 {recipe.cookTimeMinutes}m cook
                     </Typography>
                   )}
-                  {recipe.servings && (
-                    <Typography variant="body2" color="text.secondary">
+
+                  {recipe.servings != null && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       👥 {recipe.servings} servings
                     </Typography>
                   )}
-                  {recipe.caloriesPerServing && (
-                    <Typography variant="body2" color="text.secondary">
+
+                  {recipe.caloriesPerServing != null && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       🔥 {recipe.caloriesPerServing} cal
                     </Typography>
                   )}
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    mt: 2,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                  >
                     Your rating:
                   </Typography>
+
                   <Rating
                     name={`rating-${recipe.id}`}
-                    value={recipe.rating || 0}
-                    onChange={(event, newValue) => {
-                      if (newValue !== null) {
-                        handleSetRating(recipe, newValue);
-                      }
-                    }}
+                    value={recipe.rating ?? 0}
+                    onChange={(event, newValue) =>
+                      handleSetRating(recipe, newValue)
+                    }
                     precision={1}
-                    emptyIcon={<StarIcon style={{ opacity: 0.3 }} fontSize="inherit" />}
+                    emptyIcon={
+                      <StarIcon
+                        style={{ opacity: 0.3 }}
+                        fontSize="inherit"
+                      />
+                    }
                   />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    ({recipe.rating ?? 0}/5)
+                  </Typography>
                 </Box>
               </CardContent>
+
               <CardActions>
                 <Button
                   size="small"
                   color="error"
                   startIcon={<DeleteIcon />}
-                  onClick={() => dispatch(removeFavoriteRecipe(recipe.id))}
+                  onClick={() =>
+                    dispatch(removeFavoriteRecipe(recipe.id))
+                  }
                 >
                   Remove
                 </Button>
@@ -203,7 +356,16 @@ function FavoritesPage() {
       </Grid>
 
       {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 4, mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 2,
+            mt: 4,
+            mb: 2,
+          }}
+        >
           <Button
             variant="outlined"
             disabled={currentPage === 1}
@@ -211,9 +373,11 @@ function FavoritesPage() {
           >
             Previous
           </Button>
-          <Typography variant="body1" sx={{ display: 'flex', alignItems: 'center' }}>
+
+          <Typography variant="body1">
             Page {currentPage} of {totalPages}
           </Typography>
+
           <Button
             variant="outlined"
             disabled={currentPage === totalPages}
