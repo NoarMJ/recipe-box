@@ -1,7 +1,7 @@
+
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../features/auth/authSlice';
+import { useSelector } from 'react-redux';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -13,9 +13,11 @@ import {
 } from '@mui/material';
 
 function SignUpPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+
+  const isAuthenticated = useSelector(
+    (state) => state.auth.isAuthenticated
+  );
 
   const [formData, setFormData] = useState({
     name: '',
@@ -23,7 +25,10 @@ function SignUpPage() {
     password: '',
     confirmPassword: '',
   });
+
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -32,56 +37,107 @@ function SignUpPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields');
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      setError('Please fill in all fields.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match.');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
 
-    // Mock registration - in real app, this would call an API
-    const user = {
-      id: Date.now(),
-      email: formData.email,
-      name: formData.name,
-    };
+    setLoading(true);
 
-    dispatch(register(user));
-    navigate('/');
+    try {
+      const response = await fetch(
+        'http://localhost:3001/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || 'Registration failed.'
+        );
+      }
+
+      setSuccess('Account created successfully. Redirecting to login...');
+
+      navigate('/login', {
+        replace: true,
+        state: { registered: true },
+      });
+    } catch (err) {
+      setError(
+        err.message || 'Could not connect to the server.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Redirect if already logged in
   if (isAuthenticated) {
-    navigate('/');
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   return (
     <Container maxWidth="sm" sx={{ mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
-        <Typography variant="h4" component="h1" align="center" gutterBottom>
+        <Typography
+          variant="h4"
+          component="h1"
+          align="center"
+          gutterBottom
+        >
           Sign Up
         </Typography>
-        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+
+        <Typography
+          variant="body2"
+          align="center"
+          color="text.secondary"
+          sx={{ mb: 3 }}
+        >
           Create your account to get started
         </Typography>
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {success}
           </Alert>
         )}
 
@@ -95,6 +151,7 @@ function SignUpPage() {
             margin="normal"
             required
           />
+
           <TextField
             fullWidth
             label="Email"
@@ -105,6 +162,7 @@ function SignUpPage() {
             margin="normal"
             required
           />
+
           <TextField
             fullWidth
             label="Password"
@@ -115,6 +173,7 @@ function SignUpPage() {
             margin="normal"
             required
           />
+
           <TextField
             fullWidth
             label="Confirm Password"
@@ -125,14 +184,16 @@ function SignUpPage() {
             margin="normal"
             required
           />
+
           <Button
             type="submit"
             fullWidth
             variant="contained"
             size="large"
             sx={{ mt: 3, mb: 2 }}
+            disabled={loading}
           >
-            Sign Up
+            {loading ? 'Creating account...' : 'Sign Up'}
           </Button>
         </Box>
 

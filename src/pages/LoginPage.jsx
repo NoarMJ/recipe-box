@@ -15,13 +15,15 @@ import {
 function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isAuthenticated = useSelector(
+    (state) => state.auth.isAuthenticated);
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [error, setError] = useState('');
+  const  [loading , setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -30,26 +32,53 @@ function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // Simple validation
-    if (!formData.email || !formData.password) {
+    if (!formData.email.trim() || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Mock login - in real app, this would call an API
-    const user = {
-      id: Date.now(),
-      email: formData.email,
-      name: formData.email.split('@')[0],
-    };
+    setLoading(true);
 
-    dispatch(login(user));
-    navigate('/');
+    try{
+      const response = await fetch (
+        'http://localhost:3001/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type' : 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if(!response.ok) {
+        throw new Error(data.message || 'login failed.');
+      }
+
+      dispatch(login(data.user));
+
+      navigate('/' , {replace: true});
+    } catch (err) {
+      setError(
+        err.message || 'could not connect to the server'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+    
 
   // Redirect if already logged in
   if (isAuthenticated) {

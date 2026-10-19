@@ -19,6 +19,9 @@ const recipesTransform = createTransform(
     ratings: state.ratings ?? {},
     status: 'idle',
     error: null,
+
+    createStatus: 'idle',
+    createError: null,
   }),
   { whitelist: ['recipes'] },//only apply this transform to the recipes slice
 );

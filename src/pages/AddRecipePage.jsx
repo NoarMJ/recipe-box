@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch ,useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { addRecipe } from '../features/recipes/recipesSlice';
+import { createRecipe } from '../features/recipes/recipesSlice';
 
 import {
   Container,
@@ -35,6 +35,9 @@ const emptyForm = {
 function AddRecipePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const createStatus = useSelector((state) => state.recipes.createStatus);
+  const createError = useSelector((state) => state.recipes.createError);
 
   const [form, setForm] = useState(emptyForm);
   const [ingredients, setIngredients] = useState([]);
@@ -170,10 +173,23 @@ function AddRecipePage() {
       newErrors.ingredients = 'Add at least one ingredient';
     }
 
-    return newErrors;
-  };
+  
 
-  const handleSubmit = (e) => {
+  const validInstructions = instructions
+  .map((instruction) => instruction.trim())
+  .filter(Boolean);
+
+  if(
+    validInstructions.length === 0 ){ 
+      newErrors.instructions ='add at least one instruction ';
+    }
+  return newErrors;
+};
+
+
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = validate();
@@ -183,13 +199,8 @@ function AddRecipePage() {
       return;
     }
 
-    // Use the uploaded image if available; otherwise use the URL.
-    const finalImage = form.imageFile
-      ? imagePreview
-      : form.image.trim();
 
     const newRecipe = {
-      id: Date.now(),
       name: form.name.trim(),
       cuisine: form.cuisine.trim() || 'Not specified',
       difficulty: form.difficulty,
@@ -197,7 +208,7 @@ function AddRecipePage() {
       cookTimeMinutes: Number(form.cookTimeMinutes) || 0,
       servings: Number(form.servings) || 1,
       caloriesPerServing: Number(form.caloriesPerServing) || 0,
-      image: finalImage,
+      image: form.image.trim(),
       ingredients: ingredients
         .map((ingredient) => ingredient.trim())
         .filter(Boolean),
@@ -207,8 +218,17 @@ function AddRecipePage() {
       rating: 0,
     };
 
-    dispatch(addRecipe(newRecipe));
-    navigate(`/recipes/${newRecipe.id}`);
+   try {
+    const createdRecipe = await dispatch(
+      createRecipe(newRecipe)
+    ).unwrap();
+
+    navigate(`/recipes/${createdRecipe.id}`)
+
+   } catch(error) {
+    console.error('Recipe creation failed:' ,error);
+
+   }
   };
 
   return (
@@ -242,6 +262,11 @@ function AddRecipePage() {
         }}
       >
         <Box component="form" onSubmit={handleSubmit} noValidate>
+          {createError && (
+            <Typography color="error" sx={{mb: 2}}>
+              {typeof createError === 'string' ? createError : 'unable to create recipe.please try again'}
+            </Typography>
+          )}
           <Grid container spacing={3}>
             {/* Recipe Name */}
             <Grid size={{ xs: 12 }}>
@@ -559,9 +584,11 @@ function AddRecipePage() {
                 type="submit"
                 variant="contained"
                 size="large"
+                disabled ={createStatus === 'loading'}
                 sx={{ minWidth: 200, py: 1.5 }}
               >
-                Save Recipe
+                {createStatus=== 'loading' ? 'saving recipe...' : 'save recipe'}
+                
               </Button>
             </Grid>
           </Grid>
